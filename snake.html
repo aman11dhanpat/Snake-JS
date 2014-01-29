@@ -36,7 +36,7 @@
 				text-align:center;
 			}
 			#head{
-				position:relative;
+				position:absolute;
 				height:15px;
 				width:15px;
 				border:1px solid black;
@@ -45,7 +45,7 @@
 			.tail{
 			}
 			#food{
-				position:relative;
+				position:absolute;
 				height:15px;
 				width:15px;
 				border:1px solid black;
@@ -55,6 +55,7 @@
 	</head>
 	<body>
 		<div id="score">
+			Score
 		</div>
 		<div id="content">
 			<div id="head">
@@ -64,32 +65,88 @@
 		</div>
 	</body>
 	<script type="text/javascript">
-		var ctr = 0;
+		var dir = 0 //0->UP ; 1->RIGHT ; 2->DOWN ; 3->LEFT;
+		var score = 0;
+		var drm = [[-15 , 0] , [0 , 15] , [15 , 0] , [0 , -15]];
+		var fx , fy , hx , hy;
+		var d = document.getElementById('content');
+		var h = d.clientHeight;
+		var w = d.clientWidth;
+		fx = Math.floor(r (15 , w/2)/15)*15;
+		fy = Math.floor(r (15 , h/2)/15)*15;
+		hx = Math.floor(r (15 , w/2)/15)*15;
+		hy = Math.floor(r (15 , h/2)/15)*15;
+		var interval;
 		function r ( max , min )
 		{
 			return (Math.floor ( Math.random() * (max - min + 1)) + min );
 		}
+		function check_head ()
+		{
+			if ( (hx+15) > w || (hy+15) > h || hx < 0 || hy < 0 )
+				return false;
+			return true;
+		}
+		function update_score()
+		{
+			score++;
+			document.getElementById("score").innerHTML = "SCORE<br />" + score;
+		}
+		function check_food ()
+		{
+			if ( fx== hx && fy == hy )
+			{
+				fx = Math.floor(r (15 , w)/15)*15;
+				fy = Math.floor(r (15 , h)/15)*15;
+				document.getElementById("food").style.top = fy + "px";
+				document.getElementById("food").style.left = fx + "px";
+				update_score();
+				return true;
+			}
+			return false;
+		}
 		function loop(){
-			var d = document.getElementById('content');
-			var height = d.clientHeight;
-			var width = d.clientWidth;
-			var h = Math.floor(d.clientHeight/2);
-			var w = Math.floor(d.clientWidth/2);
+			var height = d.clientHeight-100;
+			var width = d.clientWidth-100;
 			if ( width < 100 || height < 100 )
 				window.close();
-			
-			document.getElementById("head").style.top = r (10 , h);
-			document.getElementById("head").style.left = r (10 , w);
-			document.getElementById("food").style.top = r (10 , h);
-			document.getElementById("food").style.left = r (10 , w);
-		}	
-		var d = document.getElementById('content');
-		var h = Math.floor(d.clientHeight/2);
-		var w = Math.floor(d.clientWidth/2);
-		document.getElementById("head").style.top = r (10 , h);
-		document.getElementById("head").style.left = r (10 , w);
-		document.getElementById("food").style.top = r (10 , h);
-		document.getElementById("food").style.left = r (10 , w);
-		setInterval (loop , 100);
+			hy += drm[dir][0];
+			hx += drm[dir][1];
+			if (check_head () == false)
+			{	
+				d.innerHTML = "Your final score is " + score;
+				clearInterval (interval);
+			}
+			check_food()
+			document.getElementById("head").style.top = hy + "px";
+			document.getElementById("head").style.left = hx + "px";
+		}
+		document.getElementById("head").style.top = hy + "px";
+		document.getElementById("head").style.left = hx + "px";
+		document.getElementById("food").style.top = fy + "px";
+		document.getElementById("food").style.left = fx + "px";
+		//0->UP ; 1->RIGHT ; 2->DOWN ; 3->LEFT;
+		window.addEventListener('keydown',function(event){
+			event = event || e;
+			switch(event.keyCode){
+				case 38://UP ARROW
+					if ( dir == 1 || dir == 3 )
+						dir = 0;
+				break;
+				case 39://RIGHT ARROW
+					if ( dir == 0 || dir == 2 )
+						dir = 1;
+				break;
+				case 37://LEFT ARROW
+					if ( dir == 0 || dir == 2 )
+						dir = 3;
+				break;
+				case 40://DOWN ARROW
+					if ( dir == 1 || dir == 3 )
+						dir = 2;
+				break;
+			}
+		});
+		interval = setInterval (loop , 300);
 	</script>
 </html>
