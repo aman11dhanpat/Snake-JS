@@ -36,16 +36,21 @@
 				text-align:center;
 			}
 			#head{
-				position:relative;
+				position:absolute;
 				height:15px;
 				width:15px;
 				border:1px solid black;
 				background:#F00;
 			}
 			.tail{
+				position:absolute;
+				height:15px;
+				width:15px;
+				border:1px solid black;
+				background:#077;
 			}
 			#food{
-				position:relative;
+				position:absolute;
 				height:15px;
 				width:15px;
 				border:1px solid black;
@@ -55,6 +60,7 @@
 	</head>
 	<body>
 		<div id="score">
+			SCORE<br />0
 		</div>
 		<div id="content">
 			<div id="head">
@@ -62,34 +68,122 @@
 			<div id="food">
 			</div>
 		</div>
-	</body>
 	<script type="text/javascript">
-		var ctr = 0;
-		function r ( max , min )
-		{
-			return (Math.floor ( Math.random() * (max - min + 1)) + min );
+		var dir = undefined, //0->UP ; 1->RIGHT ; 2->DOWN ; 3->LEFT; undefined->PAUSE
+				score = 0,
+				drm = [[-15 , 0] , [0 , 15] , [15 , 0] , [0 , -15]],
+				fx , fy , hx , hy,
+				d = document.getElementById('content'),
+				h = d.clientHeight,
+				w = d.clientWidth,
+				fx = Math.floor(r (15 , w/2)/15)*15,
+				fy = Math.floor(r (15 , h/2)/15)*15,
+				hx = Math.floor(r (15 , w/2)/15)*15,
+				hy = Math.floor(r (15 , h/2)/15)*15,
+				tail = [],
+				interval,
+				pauseState = 0;
+
+		function r ( max , min ) {
+			return ( Math.floor ( Math.random() * ( max - min + 1 ) ) + min );
 		}
-		function loop(){
-			var d = document.getElementById('content');
-			var height = d.clientHeight;
-			var width = d.clientWidth;
-			var h = Math.floor(d.clientHeight/2);
-			var w = Math.floor(d.clientWidth/2);
+
+		function check_head () {
+			if ( ( hx+15 ) > w || ( hy+15 ) > h || hx < 0 || hy < 0 )
+				return false;
+			return true;
+		}
+
+		function check_food () {
+			if ( fx === hx && fy === hy )
+			{
+				fx = Math.floor(r (15 , w)/15)*15;
+				fy = Math.floor(r (15 , h)/15)*15;
+				document.getElementById("food").style.top = fy + "px";
+				document.getElementById("food").style.left = fx + "px";
+				score++;
+				document.getElementById("score").innerHTML = "SCORE<br />" + score;
+				var t = document.createElement("div");
+				t.className = "tail";
+				d.appendChild(t);
+				tail.push(t);
+				return true;
+			}
+			return false;
+		}
+
+		function update_tail () {
+			var l = tail.pop();
+			l.style.top = hy + "px";
+			l.style.left = hx + "px";
+			tail.unshift (l);
+		}
+
+		function loop() {
+			var height = d.clientHeight-100;
+			var width = d.clientWidth-100;
 			if ( width < 100 || height < 100 )
 				window.close();
-			
-			document.getElementById("head").style.top = r (10 , h);
-			document.getElementById("head").style.left = r (10 , w);
-			document.getElementById("food").style.top = r (10 , h);
-			document.getElementById("food").style.left = r (10 , w);
-		}	
-		var d = document.getElementById('content');
-		var h = Math.floor(d.clientHeight/2);
-		var w = Math.floor(d.clientWidth/2);
-		document.getElementById("head").style.top = r (10 , h);
-		document.getElementById("head").style.left = r (10 , w);
-		document.getElementById("food").style.top = r (10 , h);
-		document.getElementById("food").style.left = r (10 , w);
-		setInterval (loop , 100);
+			update_tail();
+			hy += drm[dir][0];
+			hx += drm[dir][1];
+			if (check_head () == false)
+			{	
+				d.innerHTML = "Your final score is " + score;
+				clearInterval (interval);
+			}
+			check_food();
+			document.getElementById("head").style.top = hy + "px";
+			document.getElementById("head").style.left = hx + "px";
+		}
+
+		document.getElementById("head").style.top = hy + "px";
+		document.getElementById("head").style.left = hx + "px";
+		var t = document.createElement("div");
+		t.className = "tail";
+		d.appendChild(t);
+		tail.push(t);
+		document.getElementById("food").style.top = fy + "px";
+		document.getElementById("food").style.left = fx + "px";
+		//0->UP ; 1->RIGHT ; 2->DOWN ; 3->LEFT;
+		window.addEventListener('keydown',function(event) {
+			event = event || e;
+			switch(event.keyCode) {
+				case 32: //SPACE FOR PAUSE
+					pause();
+				break;
+				case 38://UP ARROW
+					if ( dir == 1 || dir == 3 || dir === undefined )
+						dir = 0;
+				break;
+				case 39://RIGHT ARROW
+					if ( dir == 0 || dir == 2 || dir === undefined )
+						dir = 1;
+				break;
+				case 37://LEFT ARROW
+					if ( dir == 0 || dir == 2 || dir === undefined )
+						dir = 3;
+				break;
+				case 40://DOWN ARROW
+					if ( dir == 1 || dir == 3 || dir === undefined )
+						dir = 2;
+				break;
+			}
+		});
+		interval = setInterval (loop , 300);
+		
+		function pause() {
+			if( !pauseState ) {
+				clearInterval(interval);
+				pauseState = 1;
+				document.getElementById('score').innerHTML = "SCORE<br />" + score + " (PAUSED)";
+			}
+			else {
+				interval = setInterval (loop, 300);
+				pauseState = 0;
+				document.getElementById('score').innerHTML = "SCORE<br />" + score;
+			}
+		}
 	</script>
+	</body>
 </html>
